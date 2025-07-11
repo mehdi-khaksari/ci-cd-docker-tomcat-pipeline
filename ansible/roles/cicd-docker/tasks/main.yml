@@ -1,0 +1,60 @@
+- name: Remove war file from ansible
+  file:
+    path: /home/ansible/provision/roles/cicd-docker/files/my-webapp-1.0-SNAPSHOT.war
+    state: absent
+  when: inventory_hostname == 'localhost'
+  tags: [rm]
+
+- name: Remove war file from Docker host
+  file:
+    path: /home/docker-file/tomcat/my-webapp-1.0-SNAPSHOT.war
+    state: absent
+  when: inventory_hostname == '10.10.10.12'
+  tags: [rmm]
+
+- name: Fetch from git
+  fetch:
+    src: /home/app/target/my-webapp-1.0-SNAPSHOT.war
+    dest: /home/ansible/provision/roles/cicd-docker/files/
+    flat: yes
+  when: inventory_hostname == '10.10.10.20'
+  tags: [fetch]
+
+- name: Copy to docker host
+  copy:
+    src: /home/ansible/provision/roles/cicd-docker/files/my-webapp-1.0-SNAPSHOT.war
+    dest: /home/docker-file/tomcat/
+  when: inventory_hostname == '10.10.10.12'
+  tags: [copy]
+  
+- name: Remove old container
+  docker_container:
+    name: tomcat
+    state: absent
+  when: inventory_hostname == '10.10.10.12'
+  tags: rm-container
+
+- name: Remove old image
+  docker_image:
+    name: tomcat10
+    state: absent
+  when: inventory_hostname == '10.10.10.12'
+  tags: [rm-image]
+
+- name: Build an docker image
+  docker_image:
+    build:
+      path: /home/docker-file/tomcat/
+    name: tomcat10
+    source: build
+  when: inventory_hostname == '10.10.10.12'
+  tags: [build]
+
+- name: Create new container
+  docker_container:
+    name: tomcat
+    image: tomcat10:latest
+    ports:
+      - 80:8080
+  when: inventory_hostname == '10.10.10.12'
+  tags: run
