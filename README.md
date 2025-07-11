@@ -1,4 +1,4 @@
-#  Java WebApp CI/CD Pipeline with Git, Ansible, and Docker
+#  Java WebApp CI/CD Pipeline with Git, Ansible and Docker
 
 This repository demonstrates a lightweight CI/CD pipeline for a Java web application using:
 
